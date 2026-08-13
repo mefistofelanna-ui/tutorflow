@@ -471,3 +471,78 @@ h1 { font-size:35px; font-weight:600; }
 }
 @media(max-width:760px){.stat-card{min-height:108px;aspect-ratio:auto;background-size:cover}}
 @media(max-width:430px){.stat-card{min-height:103px;background-size:cover}}
+
+/* Keep the artwork, but render all changing values as live HTML */
+.stat-card::before {
+  display:block;
+  content:"";
+  position:absolute;
+  z-index:1;
+  top:7%;
+  right:2.5%;
+  bottom:7%;
+  width:61%;
+  border-radius:42% 48% 45% 50%;
+  background:
+    radial-gradient(ellipse at 35% 20%,rgba(255,255,255,.72),transparent 50%),
+    rgba(255,251,239,.93);
+  filter:blur(1.5px);
+}
+.stat-card>div {
+  position:absolute!important;
+  z-index:2;
+  top:50%;
+  right:5%;
+  width:56%;
+  height:auto;
+  padding:0;
+  margin:0;
+  overflow:visible;
+  clip:auto;
+  white-space:normal;
+  border:0;
+  text-align:center;
+  transform:translateY(-50%);
+}
+.stat-card>.stat-icon {
+  position:absolute!important;
+  z-index:2;
+  top:13px;
+  right:13px;
+  width:25px;
+  height:25px;
+  padding:0;
+  margin:0;
+  overflow:visible;
+  clip:auto;
+  white-space:normal;
+  border:0;
+  font-size:14px;
+  background:rgba(255,255,255,.45);
+}
+.stat-card p {
+  margin:0 0 5px;
+  color:#554064;
+  font:600 clamp(12px,1.08vw,17px)/1.12 var(--font-cormorant),serif;
+}
+.stat-card strong {
+  display:block;
+  color:#513076;
+  font:700 clamp(25px,2.35vw,39px)/1 var(--font-cormorant),serif;
+}
+.stat-card.sage p,.stat-card.sage strong{color:#27623d}
+.stat-card.peach p,.stat-card.peach strong{color:#a74713}
+.stat-card.blue p,.stat-card.blue strong{color:#244987}
+@media(max-width:1050px){
+  .stat-card p{font-size:16px}.stat-card strong{font-size:36px}
+}
+@media(max-width:760px){
+  .stat-card p{font-size:14px}.stat-card strong{font-size:30px}
+}
+@media(max-width:430px){
+  .stat-card::before{width:65%;right:1%}
+  .stat-card>div{width:60%;right:3%}
+  .stat-card p{display:block;font-size:12px}
+  .stat-card strong{font-size:25px}
+  .stat-card>.stat-icon{display:none}
+}
