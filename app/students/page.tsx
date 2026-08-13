@@ -8,7 +8,7 @@ import "./students.css";
 
 export default function StudentsPage(){
  const [students,setStudents]=useState<Student[]>(initialStudents),[query,setQuery]=useState(""),[adding,setAdding]=useState(false),[toast,setToast]=useState("");const router=useRouter();
- useEffect(()=>setStudents(readStudents()),[]);
+ useEffect(()=>{const timeout=window.setTimeout(()=>setStudents(readStudents()),0);return()=>window.clearTimeout(timeout)},[]);
  const filtered=useMemo(()=>students.filter(s=>s.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru"))),[students,query]);
  const add=(student:Student)=>{const next=[...students,student];setStudents(next);writeStudents(next);setAdding(false);setToast("Ученик добавлен");window.setTimeout(()=>setToast(""),2300)};
  const tone=(n:number)=>n>=5?"balance-good":n>=2?"balance-warn":"balance-low";
