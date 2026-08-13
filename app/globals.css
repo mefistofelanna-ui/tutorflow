@@ -437,3 +437,37 @@ h1 { font-size:35px; font-weight:600; }
   .reminders{padding:10px 12px 20px}
   .reminders .reminder{margin:10px 14px!important}
 }
+
+/* Exact illustrated statistic cards from the supplied asset */
+.stat-card {
+  aspect-ratio:1.78/1;
+  min-height:112px;
+  padding:0;
+  border:0;
+  border-radius:11px;
+  background-color:transparent!important;
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center;
+  background-blend-mode:normal;
+  filter:none!important;
+  box-shadow:0 5px 13px rgba(83,63,82,.09);
+}
+.stat-card.lavender{background-image:url('/stat-card-today.png')}
+.stat-card.sage{background-image:url('/stat-card-completed.png')}
+.stat-card.peach{background-image:url('/stat-card-payment.png')}
+.stat-card.blue{background-image:url('/stat-card-income.png')}
+.stat-card::before,.stat-card::after{display:none}
+.stat-card>div,.stat-card>.stat-icon{
+  position:absolute!important;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+@media(max-width:760px){.stat-card{min-height:108px;aspect-ratio:auto;background-size:cover}}
+@media(max-width:430px){.stat-card{min-height:103px;background-size:cover}}
