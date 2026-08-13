@@ -45,7 +45,7 @@ export default function Home() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <img className="sidebar-illustration" src="/watercolor-books.png" alt="" aria-hidden="true" />
+          <img className="sidebar-illustration" src="/asset-tutorflow-cup.png" alt="" aria-hidden="true" />
           <button className="nav-item" onClick={() => notify("Настройки будут добавлены позже")}><span className="nav-icon">⚙</span>Настройки</button>
           <div className="profile"><div className="avatar">А</div><div><b>Анна</b><small>Преподаватель</small></div><span>⋮</span></div>
         </div>
@@ -54,7 +54,7 @@ export default function Home() {
       {menuOpen && <button className="backdrop" aria-label="Закрыть меню" onClick={() => setMenuOpen(false)} />}
 
       <section className="content">
-        <img className="corner-lavender" src="/watercolor-lavender.png" alt="" aria-hidden="true" />
+        <img className="corner-lavender" src="/asset-lavender-sprig.png" alt="" aria-hidden="true" />
         <header className="topbar">
           <button className="menu-button" aria-label="Открыть меню" onClick={() => setMenuOpen(true)}>☰</button>
           <div><p className="eyebrow">Четверг, 13 августа</p><h1>Добрый день, Анна <span>✦</span></h1><p className="subtitle">Вот что запланировано на сегодня</p></div>
@@ -89,7 +89,7 @@ export default function Home() {
           </aside>
         </div>
 
-        <div className="week-note"><span>✦</span><p><strong>Спокойного рабочего дня!</strong><br />На этой неделе вы провели 12 занятий</p><img className="week-books" src="/watercolor-books.png" alt="" aria-hidden="true" /></div>
+        <div className="week-note"><span>✦</span><p><strong>Спокойного рабочего дня!</strong><br />На этой неделе вы провели 12 занятий</p><img className="week-books" src="/asset-books-lavender.png" alt="" aria-hidden="true" /></div>
       </section>
       {toast && <div className="toast" role="status">✓ {toast}</div>}
     </main>

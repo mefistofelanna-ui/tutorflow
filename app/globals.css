@@ -380,3 +380,60 @@ h1 { font-size:35px; font-weight:600; }
 .reminders .rose-reminder { background:rgba(244,219,211,.62); }
 .reminders .all-reminders { color:#806044; }
 @media(max-width:1050px){.reminders{transform:none;margin-top:5px}}
+
+/* New supplied watercolor assets */
+.sidebar-illustration {
+  width:142px;
+  height:142px;
+  margin:0 auto -18px;
+  opacity:.92;
+  filter:drop-shadow(0 6px 8px rgba(81,60,89,.08));
+}
+.corner-lavender {
+  top:-80px;
+  right:-26px;
+  width:190px;
+  height:285px;
+  opacity:.15;
+  transform:rotate(9deg);
+}
+.stat-card {
+  background-image:url('/asset-watercolor-wash.png'),linear-gradient(135deg,rgba(255,255,255,.45),rgba(255,255,255,.08));
+  background-size:135% 155%,cover;
+  background-position:center;
+  background-blend-mode:multiply,normal;
+}
+.stat-card.lavender { background-color:#eee4f7; }
+.stat-card.sage { background-color:#e8f0e4; filter:hue-rotate(48deg) saturate(.72); }
+.stat-card.sage>* { filter:hue-rotate(-48deg) saturate(1.38); }
+.stat-card.peach { background-color:#f7e6d8; filter:hue-rotate(310deg) saturate(.75); }
+.stat-card.peach>* { filter:hue-rotate(50deg) saturate(1.34); }
+.stat-card.blue { background-color:#e4ebf4; filter:hue-rotate(30deg) saturate(.62); }
+.stat-card.blue>* { filter:hue-rotate(-30deg) saturate(1.6); }
+.reminders {
+  border:0;
+  border-radius:2px;
+  padding-top:2px;
+  background-image:url('/asset-note-paper.png');
+  background-size:100% 100%;
+  background-position:center;
+  background-color:transparent;
+  box-shadow:2px 5px 15px rgba(91,68,43,.13);
+}
+.reminders::before,.reminders::after { display:none; }
+.reminders .panel-heading { margin:15px 15px 0; padding-left:10px; padding-right:10px; }
+.reminders .reminder { margin-left:30px; margin-right:30px; background:rgba(255,250,235,.5); }
+.reminders .all-reminders { margin-bottom:24px; }
+.week-books { width:132px; height:132px; right:6px; bottom:-42px; opacity:.76; }
+@media(max-width:1050px){
+  .reminders{background-size:100% 100%;padding:8px 12px 18px}
+  .reminders .panel-heading{margin:7px 5px 0}
+  .reminders .reminder{margin-left:6px;margin-right:6px}
+  .reminders .all-reminders{margin-bottom:2px}
+}
+@media(max-width:760px){
+  .sidebar-illustration{width:128px;height:128px}
+  .corner-lavender{width:120px;height:190px;top:-55px;right:-24px}
+  .reminders{padding:10px 12px 20px}
+  .reminders .reminder{margin:10px 14px!important}
+}
