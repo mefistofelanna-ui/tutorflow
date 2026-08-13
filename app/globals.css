@@ -321,3 +321,62 @@ h1 { font-size:35px; font-weight:600; }
   .content{padding-top:28px}
   .corner-lavender{opacity:.08}
 }
+
+/* Reminders as a warm paper sticky note */
+.reminders {
+  overflow:visible;
+  transform:rotate(.18deg);
+  border:1px solid rgba(151,116,61,.2);
+  border-radius:3px 7px 5px 2px;
+  background:
+    radial-gradient(ellipse at 18% 8%,rgba(255,255,255,.64),transparent 31%),
+    radial-gradient(ellipse at 83% 72%,rgba(222,184,105,.12),transparent 43%),
+    repeating-linear-gradient(2deg,rgba(130,93,47,.018) 0,rgba(130,93,47,.018) 1px,transparent 1px,transparent 5px),
+    #fff4d8;
+  box-shadow:3px 5px 14px rgba(91,68,43,.11),inset 0 0 24px rgba(216,176,102,.1);
+}
+.reminders::before {
+  content:"";
+  position:absolute;
+  z-index:3;
+  top:-12px;
+  left:50%;
+  width:74px;
+  height:25px;
+  transform:translateX(-50%) rotate(-2deg);
+  background:linear-gradient(90deg,rgba(218,202,170,.48),rgba(244,232,199,.68),rgba(210,191,156,.47));
+  border-left:1px dashed rgba(142,119,81,.15);
+  border-right:1px dashed rgba(142,119,81,.15);
+  box-shadow:0 1px 3px rgba(78,57,34,.06);
+  pointer-events:none;
+}
+.reminders::after {
+  content:"";
+  position:absolute;
+  right:-1px;
+  bottom:-1px;
+  width:29px;
+  height:29px;
+  background:linear-gradient(135deg,rgba(229,202,146,.28) 0 48%,#f7e8c5 50% 67%,rgba(182,145,86,.22) 69% 100%);
+  clip-path:polygon(100% 0,100% 100%,0 100%);
+  filter:drop-shadow(-2px -2px 2px rgba(94,68,34,.06));
+  pointer-events:none;
+}
+.reminders .panel-heading {
+  border-bottom:1px dashed rgba(139,103,57,.16);
+}
+.reminders .section-kicker { color:#9b6c42; }
+.reminders .bell {
+  color:#8c6f45;
+  background:rgba(255,249,225,.72);
+  border:1px solid rgba(152,119,69,.12);
+}
+.reminders .reminder {
+  border:1px solid rgba(152,116,67,.1);
+  box-shadow:0 1px 3px rgba(105,77,45,.035);
+}
+.reminders .peach-reminder { background:rgba(250,227,205,.68); }
+.reminders .yellow-reminder { background:rgba(244,233,192,.72); }
+.reminders .rose-reminder { background:rgba(244,219,211,.62); }
+.reminders .all-reminders { color:#806044; }
+@media(max-width:1050px){.reminders{transform:none;margin-top:5px}}
