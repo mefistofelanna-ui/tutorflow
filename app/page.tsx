@@ -45,7 +45,7 @@ export default function Home() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <img className="sidebar-illustration" src="/watercolor-pencils.png" alt="" aria-hidden="true" />
+          <img className="sidebar-illustration" src="/watercolor-books.png" alt="" aria-hidden="true" />
           <button className="nav-item" onClick={() => notify("Настройки будут добавлены позже")}><span className="nav-icon">⚙</span>Настройки</button>
           <div className="profile"><div className="avatar">А</div><div><b>Анна</b><small>Преподаватель</small></div><span>⋮</span></div>
         </div>
