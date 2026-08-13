@@ -546,3 +546,54 @@ h1 { font-size:35px; font-weight:600; }
   .stat-card strong{font-size:25px}
   .stat-card>.stat-icon{display:none}
 }
+
+/* Typography for the clean, text-free watercolor cards */
+.stat-card::before{display:none}
+.stat-card>div{
+  right:4%;
+  width:57%;
+  filter:none!important;
+}
+.stat-card p{
+  position:relative;
+  display:inline-block;
+  max-width:100%;
+  margin:0 0 13px;
+  padding:0 4px 7px;
+  color:#55307d;
+  font:600 clamp(14px,1.22vw,20px)/1.05 var(--font-cormorant),serif;
+  letter-spacing:.1px;
+}
+.stat-card p::after{
+  content:"";
+  position:absolute;
+  left:9%;
+  right:9%;
+  bottom:0;
+  height:4px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.22;
+  transform:rotate(-1deg) scaleY(.65);
+}
+.stat-card strong{
+  color:#54237c;
+  font:700 clamp(31px,2.7vw,45px)/.9 var(--font-cormorant),serif;
+  letter-spacing:.4px;
+  text-shadow:0 1px rgba(255,255,255,.7);
+}
+.stat-card.sage p,.stat-card.sage strong{color:#27643d}
+.stat-card.peach p,.stat-card.peach strong{color:#a84310}
+.stat-card.blue p,.stat-card.blue strong{color:#234a8c}
+.stat-card>.stat-icon{display:none}
+@media(max-width:1050px){
+  .stat-card p{font-size:19px}.stat-card strong{font-size:43px}
+}
+@media(max-width:760px){
+  .stat-card p{margin-bottom:10px;font-size:16px}.stat-card strong{font-size:35px}
+}
+@media(max-width:430px){
+  .stat-card>div{right:3%;width:59%}
+  .stat-card p{font-size:13px;margin-bottom:8px;padding-bottom:5px}
+  .stat-card strong{font-size:28px}
+}
