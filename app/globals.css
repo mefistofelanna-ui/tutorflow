@@ -585,6 +585,7 @@ h1 { font-size:35px; font-weight:600; }
 .stat-card.sage p,.stat-card.sage strong{color:#27643d}
 .stat-card.peach p,.stat-card.peach strong{color:#a84310}
 .stat-card.blue p,.stat-card.blue strong{color:#234a8c}
+.stat-card.blue>div{right:9%}
 .stat-card>.stat-icon{display:none}
 @media(max-width:1050px){
   .stat-card p{font-size:19px}.stat-card strong{font-size:43px}
@@ -596,4 +597,5 @@ h1 { font-size:35px; font-weight:600; }
   .stat-card>div{right:3%;width:59%}
   .stat-card p{font-size:13px;margin-bottom:8px;padding-bottom:5px}
   .stat-card strong{font-size:28px}
+  .stat-card.blue>div{right:7%}
 }
