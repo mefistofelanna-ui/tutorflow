@@ -14,6 +14,7 @@ const navItems = [
 ];
 
 const colors=["purple","blue","peach","sage"];
+const dashboardDate=()=>new Date(`${demoToday}T12:00:00`).toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"}).replace(/^./,letter=>letter.toLocaleUpperCase("ru-RU"));
 function dashboardLessons(students=initialStudents,source=initialLessons){return source.filter(lesson=>lesson.date===demoToday).sort((a,b)=>a.time.localeCompare(b.time)).map((lesson,index)=>{const student=students.find(item=>item.id===lesson.studentId);return {id:lesson.id,time:lesson.time,duration:lesson.duration,name:student?.name??"Ученик",grade:student?.grade??"",initials:(student?.name??"У").split(" ").map(part=>part[0]).join("").slice(0,2),color:colors[index%colors.length],paid:lesson.paid,status:lesson.status}})}
 const statusNames={scheduled:"Запланировано",completed:"Проведено",cancelled:"Отменено",rescheduled:"Перенесено"};
 
@@ -63,7 +64,7 @@ export default function Home() {
         <img className="corner-lavender" src="/asset-lavender-sprig.png" alt="" aria-hidden="true" />
         <header className="topbar">
           <button className="menu-button" aria-label="Открыть меню" onClick={() => setMenuOpen(true)}>☰</button>
-          <div><p className="eyebrow">Четверг, 13 августа</p><h1>Добрый день, Анна <span>✦</span></h1><p className="subtitle">Вот что запланировано на сегодня</p></div>
+          <div><p className="eyebrow">{dashboardDate()}</p><h1>Добрый день, Анна <span>✦</span></h1><p className="subtitle">Вот что запланировано на сегодня</p></div>
           <div className="header-actions"><button className="secondary" onClick={() => { window.location.href="/students?add=1" }}>＋ <span>Добавить ученика</span></button><button className="primary" onClick={() => { window.location.href="/schedule?add=1" }}>＋ Добавить занятие</button></div>
         </header>
 
