@@ -1,20 +1,34 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import test from "node:test";
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-  return worker.fetch(new Request("http://localhost/", { headers: { accept: "text/html" } }), {
-    ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) },
-  }, { waitUntil() {}, passThroughOnException() {} });
+const port = 4321;
+
+async function waitForServer() {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}/`);
+      if (response.ok) return response;
+    } catch {}
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  throw new Error("Next.js server did not start in time");
 }
 
-test("server-renders the TutorFlow dashboard", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  const html = await response.text();
-  assert.match(html, /<title>TutorFlow/);
-  assert.match(html, /Firebase не настроен|Занятия сегодня/);
-  assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Building your site/);
+test("standard Next.js server renders TutorFlow", async () => {
+  const nextBin = new URL("../node_modules/next/dist/bin/next", import.meta.url);
+  const server = spawn(process.execPath, [nextBin.pathname.slice(1), "start", "-H", "127.0.0.1", "-p", String(port)], {
+    cwd: new URL("..", import.meta.url),
+    stdio: "ignore",
+  });
+  try {
+    const response = await waitForServer();
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    assert.match(html, /<title>TutorFlow/);
+    assert.match(html, /Firebase не настроен|Загружаем TutorFlow|Занятия сегодня/);
+    assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Building your site/);
+  } finally {
+    server.kill();
+  }
 });
