@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { initialStudents, readStudents } from "./students/student-data";
-import { demoToday, initialLessons, readLessons } from "./schedule/lesson-data";
+import { initialStudents, readStudents, Student } from "./students/student-data";
+import { demoToday, initialLessons, Lesson, readLessons } from "./schedule/lesson-data";
 
 const navItems = [
   ["⌂", "Главная"],
@@ -13,18 +13,23 @@ const navItems = [
 ];
 
 const colors=["purple","blue","peach","sage"];
-function dashboardLessons(students=initialStudents,source=initialLessons){return source.filter(lesson=>lesson.date===demoToday&&lesson.status!=="cancelled").sort((a,b)=>a.time.localeCompare(b.time)).map((lesson,index)=>{const student=students.find(item=>item.id===lesson.studentId);return {time:lesson.time,duration:lesson.duration,name:student?.name??"Ученик",grade:student?.grade??"",initials:(student?.name??"У").split(" ").map(part=>part[0]).join("").slice(0,2),color:colors[index%colors.length],paid:lesson.paid,status:lesson.status}})}
+function dashboardLessons(students=initialStudents,source=initialLessons){return source.filter(lesson=>lesson.date===demoToday).sort((a,b)=>a.time.localeCompare(b.time)).map((lesson,index)=>{const student=students.find(item=>item.id===lesson.studentId);return {id:lesson.id,time:lesson.time,duration:lesson.duration,name:student?.name??"Ученик",grade:student?.grade??"",initials:(student?.name??"У").split(" ").map(part=>part[0]).join("").slice(0,2),color:colors[index%colors.length],paid:lesson.paid,status:lesson.status}})}
+const statusNames={scheduled:"Запланировано",completed:"Проведено",cancelled:"Отменено",rescheduled:"Перенесено"};
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
-  const [lessons,setLessons]=useState(()=>dashboardLessons());
-  useEffect(()=>{const timer=window.setTimeout(()=>setLessons(dashboardLessons(readStudents(),readLessons())),0);return()=>window.clearTimeout(timer)},[]);
+  const [students,setStudents]=useState<Student[]>(initialStudents);
+  const [sourceLessons,setSourceLessons]=useState<Lesson[]>(initialLessons);
+  const lessons=dashboardLessons(students,sourceLessons);
+  useEffect(()=>{const load=()=>{setStudents(readStudents());setSourceLessons(readLessons())};const timer=window.setTimeout(load,0);window.addEventListener("tutorflow-data-change",load);window.addEventListener("storage",load);return()=>{window.clearTimeout(timer);window.removeEventListener("tutorflow-data-change",load);window.removeEventListener("storage",load)}},[]);
+  const completedThisMonth=sourceLessons.filter(item=>{const date=new Date(`${item.date}T12:00:00`),today=new Date(`${demoToday}T12:00:00`);return item.status==="completed"&&date.getMonth()===today.getMonth()&&date.getFullYear()===today.getFullYear()});
+  const reminders=students.filter(student=>student.balance<=4).sort((a,b)=>a.balance-b.balance).slice(0,3);
   const stats = [
     { label: "Занятий сегодня", value: String(lessons.length), tone: "lavender", icon: "⌁" },
     { label: "Проведено", value: String(lessons.filter(item=>item.status==="completed").length), tone: "sage", icon: "✓" },
-    { label: "Ожидает оплаты", value: String(lessons.filter(item=>!item.paid).length), tone: "peach", icon: "₽" },
-    { label: "Доход за август", value: "32 000 ₽", tone: "blue", icon: "↗" },
+    { label: "Ожидает оплаты", value: String(students.filter(item=>item.balance===0).length), tone: "peach", icon: "₽" },
+    { label: "Доход за август", value: `${completedThisMonth.reduce((sum,item)=>sum+(item.earnedAmount??students.find(student=>student.id===item.studentId)?.price??0),0).toLocaleString("ru-RU")} ₽`, tone: "blue", icon: "↗" },
   ];
 
   const notify = (message: string) => {
@@ -57,7 +62,7 @@ export default function Home() {
         <header className="topbar">
           <button className="menu-button" aria-label="Открыть меню" onClick={() => setMenuOpen(true)}>☰</button>
           <div><p className="eyebrow">Четверг, 13 августа</p><h1>Добрый день, Анна <span>✦</span></h1><p className="subtitle">Вот что запланировано на сегодня</p></div>
-          <div className="header-actions"><button className="secondary" onClick={() => notify("Форма ученика откроется на следующем этапе")}>＋ <span>Добавить ученика</span></button><button className="primary" onClick={() => notify("Форма занятия откроется на этапе расписания")}>＋ Добавить занятие</button></div>
+          <div className="header-actions"><button className="secondary" onClick={() => { window.location.href="/students?add=1" }}>＋ <span>Добавить ученика</span></button><button className="primary" onClick={() => { window.location.href="/schedule?add=1" }}>＋ Добавить занятие</button></div>
         </header>
 
         <div className="stats-grid">
@@ -68,12 +73,12 @@ export default function Home() {
           <section className="panel lessons-panel">
             <div className="panel-heading"><div><p className="section-kicker">МОЙ ДЕНЬ</p><h2>Занятия сегодня <span className="count">{lessons.length}</span></h2></div><button className="text-button" onClick={() => {window.location.href="/schedule"}}>Всё расписание <span>→</span></button></div>
             <div className="lesson-list">
-              {lessons.map((lesson) => <article className="lesson" key={lesson.time}>
+              {lessons.map((lesson) => <article className={`lesson lesson-${lesson.status}`} key={lesson.id}>
                 <div className="lesson-time"><strong>{lesson.time}</strong><span>{lesson.duration} мин</span></div>
                 <div className={`student-avatar ${lesson.color}`}>{lesson.initials}</div>
                 <div className="student-info"><strong>{lesson.name}</strong><span>{lesson.grade}</span></div>
                 <span className={lesson.paid ? "badge paid" : "badge unpaid"}>{lesson.paid ? "Оплачено" : "Не оплачено"}</span>
-                <span className={lesson.status === "completed" ? "status completed" : "status scheduled"}><i />{lesson.status === "completed" ? "Проведено" : "Запланировано"}</span>
+                <span className={`status ${lesson.status}`}><i />{statusNames[lesson.status]}</span>
                 <button className="more" aria-label={`Действия: ${lesson.name}`} onClick={() => notify(`Действия для ${lesson.name}`)}>•••</button>
               </article>)}
             </div>
@@ -81,9 +86,7 @@ export default function Home() {
 
           <aside className="panel reminders">
             <div className="panel-heading"><div><p className="section-kicker">ВАЖНОЕ</p><h2>Напоминания</h2></div><span className="bell">♧</span></div>
-            <div className="reminder peach-reminder"><span className="reminder-icon">!</span><div><strong>Артём Смирнов</strong><p>Занятие сегодня не оплачено</p></div><button aria-label="Подробнее">›</button></div>
-            <div className="reminder yellow-reminder"><span className="reminder-icon">1</span><div><strong>Соня Волкова</strong><p>Осталось 1 занятие</p></div><button aria-label="Подробнее">›</button></div>
-            <div className="reminder rose-reminder"><span className="reminder-icon">0</span><div><strong>Денис Котов</strong><p>Оплаченные занятия закончились</p></div><button aria-label="Подробнее">›</button></div>
+            {reminders.map(student=><div className={`reminder ${student.balance===0?"rose-reminder":student.balance===1?"peach-reminder":"yellow-reminder"}`} key={student.id}><span className="reminder-icon">{student.balance}</span><div><strong>{student.name}</strong><p>{student.balance===0?"Оплаченные занятия закончились":`Осталось ${student.balance} занятия`}</p></div><button aria-label={`Подробнее: ${student.name}`}>›</button></div>)}
             <button className="all-reminders" onClick={() => notify("Все напоминания просмотрены")}>Посмотреть все напоминания</button>
           </aside>
         </div>

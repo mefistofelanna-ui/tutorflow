@@ -46,6 +46,9 @@ h1,h2 { font-family:var(--font-cormorant),serif; margin:0; color:#393442; } h1{f
   --paper:#fffaf1;
   --line:rgba(138,111,159,.14);
 }
+
+/* Live lesson statuses on Dashboard */
+.status.cancelled{padding:5px 8px;border-radius:10px;background:#f8e2da;color:#a75b4c}.status.cancelled i{background:#cf7a69}.status.rescheduled{padding:5px 8px;border-radius:10px;background:#e1edf2;color:#52788a}.status.rescheduled i{background:#78a2b5}.lesson-cancelled{background:rgba(253,242,236,.45)}.lesson-completed{background:rgba(239,247,237,.35)}
 body {
   background:#f8f2e8;
 }
@@ -587,6 +590,9 @@ h1 { font-size:35px; font-weight:600; }
 .stat-card.blue p,.stat-card.blue strong{color:#234a8c}
 .stat-card.blue>div{right:9%}
 .stat-card>.stat-icon{display:none}
+.stat-card{
+  filter:saturate(.42) contrast(.82) brightness(1.14)!important;
+}
 @media(max-width:1050px){
   .stat-card p{font-size:19px}.stat-card strong{font-size:43px}
 }

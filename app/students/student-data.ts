@@ -6,6 +6,7 @@ export type Student = {
   balance: number;
   days: string;
   comment: string;
+  archived?: boolean;
 };
 
 export const initialStudents: Student[] = [
@@ -32,4 +33,5 @@ export function readStudents(): Student[] {
 
 export function writeStudents(students: Student[]) {
   window.localStorage.setItem(storageKey, JSON.stringify(students));
+  window.dispatchEvent(new Event("tutorflow-data-change"));
 }

@@ -12,6 +12,8 @@ export type Lesson = {
   note: string;
   charged: boolean;
   earnedAmount?: number;
+  seriesId?: string;
+  seriesOverride?: boolean;
 };
 
 export const lessonStorageKey = "tutorflow-lessons-v1";
@@ -46,6 +48,7 @@ export function readLessons(): Lesson[] {
 
 export function writeLessons(lessons: Lesson[]) {
   window.localStorage.setItem(lessonStorageKey,JSON.stringify(lessons));
+  window.dispatchEvent(new Event("tutorflow-data-change"));
 }
 
 export function studentName(id:string){return initialStudents.find(student=>student.id===id)?.name??"Ученик"}
