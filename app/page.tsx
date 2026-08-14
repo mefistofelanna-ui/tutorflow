@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { initialStudents, readStudents, Student } from "./students/student-data";
 import { demoToday, initialLessons, Lesson, readLessons } from "./schedule/lesson-data";
+import {useTutorAuth} from "./AppProvider";
 
 const navItems = [
   ["⌂", "Главная"],
@@ -17,6 +18,7 @@ function dashboardLessons(students=initialStudents,source=initialLessons){return
 const statusNames={scheduled:"Запланировано",completed:"Проведено",cancelled:"Отменено",rescheduled:"Перенесено"};
 
 export default function Home() {
+  const {logout}=useTutorAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [students,setStudents]=useState<Student[]>(initialStudents);
@@ -51,7 +53,7 @@ export default function Home() {
         <div className="sidebar-bottom">
           <img className="sidebar-illustration" src="/asset-tutorflow-cup.png" alt="" aria-hidden="true" />
           <button className="nav-item" onClick={() => notify("Настройки будут добавлены позже")}><span className="nav-icon">⚙</span>Настройки</button>
-          <div className="profile"><div className="avatar">А</div><div><b>Анна</b><small>Преподаватель</small></div><span>⋮</span></div>
+          <div className="profile"><div className="avatar">А</div><div><b>Анна</b><small>Преподаватель</small></div><button className="logout-button" onClick={()=>void logout()}>Выйти</button></div>
         </div>
       </aside>
 

@@ -1,8 +1,9 @@
 "use client";
 import { FormEvent,useEffect,useMemo,useState } from "react";
 import StudentsShell from "../students/StudentsShell";
-import { initialStudents,readStudents,Student,writeStudents } from "../students/student-data";
-import { Payment,readPayments,writePayments } from "./payment-data";
+import { initialStudents,readStudents,Student } from "../students/student-data";
+import { Payment,readPayments } from "./payment-data";
+import {deletePaymentTransaction,savePaymentTransaction} from "../../lib/firebase-operations";
 import "../students/students.css";
 import "./payments.css";
 
@@ -13,13 +14,12 @@ type Dialog={kind:"add"}|{kind:"edit"|"delete";payment:Payment}|null;
 
 export default function PaymentsPage(){
  const now=new Date(),[students,setStudents]=useState<Student[]>(initialStudents),[payments,setPayments]=useState<Payment[]>([]),[month,setMonth]=useState(now.getMonth()),[year,setYear]=useState(now.getFullYear()),[dialog,setDialog]=useState<Dialog>(null),[toast,setToast]=useState("");
- useEffect(()=>{const timer=window.setTimeout(()=>{setStudents(readStudents());setPayments(readPayments())},0);return()=>window.clearTimeout(timer)},[]);
+ useEffect(()=>{const load=()=>{setStudents(readStudents());setPayments(readPayments())},timer=window.setTimeout(load,0);window.addEventListener("tutorflow-data-change",load);return()=>{window.clearTimeout(timer);window.removeEventListener("tutorflow-data-change",load)}},[]);
  const monthly=useMemo(()=>payments.filter(payment=>{const date=new Date(`${payment.date}T12:00:00`);return date.getMonth()===month&&date.getFullYear()===year}).sort((a,b)=>b.date.localeCompare(a.date)),[payments,month,year]);
  const received=monthly.reduce((sum,payment)=>sum+payment.amount,0),paidLessons=monthly.reduce((sum,payment)=>sum+payment.lessonCount,0),needPayment=students.filter(student=>student.balance===0).length;
  const notify=(message:string)=>{setToast(message);window.setTimeout(()=>setToast(""),2300)};
- const persist=(nextPayments:Payment[],nextStudents:Student[])=>{setPayments(nextPayments);writePayments(nextPayments);setStudents(nextStudents);writeStudents(nextStudents)};
- const save=(payment:Payment,previous?:Payment)=>{let nextStudents=students;if(previous&&previous.studentId!==payment.studentId){nextStudents=nextStudents.map(student=>student.id===previous.studentId?{...student,balance:Math.max(0,student.balance-previous.lessonCount)}:student);nextStudents=nextStudents.map(student=>student.id===payment.studentId?{...student,balance:student.balance+payment.lessonCount}:student)}else{const difference=payment.lessonCount-(previous?.lessonCount??0);nextStudents=nextStudents.map(student=>student.id===payment.studentId?{...student,balance:Math.max(0,student.balance+difference)}:student)}const nextPayments=previous?payments.map(item=>item.id===payment.id?payment:item):[...payments,payment];persist(nextPayments,nextStudents);setDialog(null);notify(previous?"Оплата обновлена":"Оплата добавлена")};
- const remove=(payment:Payment)=>{const nextStudents=students.map(student=>student.id===payment.studentId?{...student,balance:Math.max(0,student.balance-payment.lessonCount)}:student);persist(payments.filter(item=>item.id!==payment.id),nextStudents);setDialog(null);notify("Оплата удалена")};
+ const save=async(payment:Payment,previous?:Payment)=>{try{await savePaymentTransaction(payment);setDialog(null);notify(previous?"Оплата обновлена":"Оплата добавлена")}catch{notify("Не удалось сохранить оплату. Попробуйте ещё раз.")}};
+ const remove=async(payment:Payment)=>{try{await deletePaymentTransaction(payment.id);setDialog(null);notify("Оплата удалена")}catch{notify("Не удалось удалить оплату. Попробуйте ещё раз.")}};
  const shiftMonth=(amount:number)=>{const date=new Date(year,month+amount,1);setMonth(date.getMonth());setYear(date.getFullYear())};
  const lastFor=(studentId:string)=>payments.filter(payment=>payment.studentId===studentId).sort((a,b)=>b.date.localeCompare(a.date))[0];
  return <StudentsShell active="Оплаты" toast={toast}><header className="students-header payments-header"><div><h1>Оплаты</h1><p>Платежи и остаток занятий</p></div><button className="students-add" onClick={()=>setDialog({kind:"add"})}>+ Добавить оплату</button></header>

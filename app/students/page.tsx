@@ -26,7 +26,7 @@ export default function StudentsPage() {
   const [toast,setToast] = useState("");
   const router = useRouter();
 
-  useEffect(() => { const timeout=window.setTimeout(() => { setStudents(readStudents()); if(new URLSearchParams(window.location.search).get("add") === "1") setAdding(true); },0); return () => window.clearTimeout(timeout); },[]);
+  useEffect(() => { const load=()=>setStudents(readStudents()),timeout=window.setTimeout(() => { load(); if(new URLSearchParams(window.location.search).get("add") === "1") setAdding(true); },0); window.addEventListener("tutorflow-data-change",load); return () => {window.clearTimeout(timeout);window.removeEventListener("tutorflow-data-change",load)}; },[]);
   const filtered = useMemo(() => students.filter(student => !student.archived && student.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru"))),[students,query]);
   const commit = (request:PendingAdd, skipConflicts=false) => {
     const conflictIds = new Set(request.conflicts.map(item => item.id));

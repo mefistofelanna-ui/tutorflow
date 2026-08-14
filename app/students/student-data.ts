@@ -19,19 +19,10 @@ export const initialStudents: Student[] = [
 export const storageKey = "tutorflow-students-v2";
 
 export function readStudents(): Student[] {
-  if (typeof window === "undefined") return initialStudents;
-  const saved = window.localStorage.getItem(storageKey);
-  if (!saved) return initialStudents;
-  try {
-    const parsed = JSON.parse(saved) as Partial<Student>[];
-    return parsed.map(student => {
-      const current = initialStudents.find(item => item.id === student.id);
-      return { ...current, ...student, days: student.days ?? current?.days ?? "" } as Student;
-    });
-  } catch { return initialStudents; }
+  return cached<Student>("students");
 }
 
 export function writeStudents(students: Student[]) {
-  window.localStorage.setItem(storageKey, JSON.stringify(students));
-  window.dispatchEvent(new Event("tutorflow-data-change"));
+  void replaceCollection("students",students).catch(()=>window.dispatchEvent(new CustomEvent("tutorflow-error",{detail:"Не удалось сохранить учеников."})));
 }
+import { cached,replaceCollection } from "../../lib/firestore-store";

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Lesson } from "../app/schedule/lesson-data.ts";
-import { buildSeriesLessons, conflictsFor } from "../app/schedule/series-data.ts";
+import { buildSeriesLessons, conflictsFor } from "../app/schedule/series-utils.ts";
 
 const lesson=(overrides:Partial<Lesson>={}):Lesson=>({id:"one",studentId:"student",date:"2026-08-18",time:"15:00",duration:60,status:"scheduled",paid:true,note:"",charged:false,...overrides});
 

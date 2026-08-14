@@ -1,0 +1,6 @@
+"use client";
+import {FormEvent,useState} from "react";
+import {signInWithEmailAndPassword} from "firebase/auth";
+import {auth} from "../../lib/firebase";
+import "./login.css";
+export default function LoginPage(){const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false);const submit=async(event:FormEvent)=>{event.preventDefault();setLoading(true);setError("");try{await signInWithEmailAndPassword(auth,email,password)}catch{setError("Не удалось войти. Проверьте email и пароль.")}finally{setLoading(false)}};return <main className="login-page"><img src="/asset-lavender-sprig.png" alt=""/><form className="login-card" onSubmit={submit}><div className="login-brand"><i>T</i>TutorFlow</div><h1>С возвращением</h1><p>Войдите в кабинет преподавателя</p><label>Email<input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Пароль<input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label>{error&&<div className="login-error" role="alert">{error}</div>}<button disabled={loading}>{loading?"Входим…":"Войти"}</button></form></main>}
