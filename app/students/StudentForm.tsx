@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import type { Lesson } from "../schedule/lesson-data";
 import type { ScheduleSlot } from "../schedule/series-utils";
 import type { Student } from "./student-data";
+import { currentLessonPrice } from "./student-price";
 
 export type StudentSchedule = {
   mode: "single" | "weekly";
@@ -42,11 +43,11 @@ export default function StudentForm({ initial, initialSchedule, title, onSave, o
   const [schedule, setSchedule] = useState<StudentSchedule>(initialSchedule ?? {
     mode:"single", date:today, time:"15:00", duration:60, weekdays:[], slots:[], endDate:addYear(today),
   });
-  const change = (key: keyof Student, value: string) => setForm({ ...form, [key]: key === "price" || key === "balance" ? Number(value) : value });
+  const change = (key: keyof Student, value: string) => {const next=key === "price" || key === "balance" ? Number(value) : value;setForm({ ...form, [key]:next, ...(key==="price"?{lessonPrice:Number(value)}:{}) });};
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (schedule.mode === "weekly" && !schedule.slots.length) return;
-    onSave({ ...form, id: form.id || `student-${Date.now()}` }, initial && !initialSchedule ? undefined : schedule);
+    onSave({ ...form, lessonPrice:currentLessonPrice(form), id: form.id || `student-${Date.now()}` }, initial && !initialSchedule ? undefined : schedule);
   };
 
   return <div className="student-modal-backdrop" onMouseDown={event => event.target === event.currentTarget && onCancel()}>

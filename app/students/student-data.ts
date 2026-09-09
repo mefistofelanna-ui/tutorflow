@@ -3,6 +3,7 @@ export type Student = {
   name: string;
   grade: string;
   price: number;
+  lessonPrice?: number;
   balance: number;
   days: string;
   comment: string;

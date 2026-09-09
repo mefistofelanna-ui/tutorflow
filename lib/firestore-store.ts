@@ -27,7 +27,7 @@ export async function seedFirestore(seed:Record<CollectionName,{id:string}[]>){
 
 export function startFirestoreSync(onReady:()=>void,onError:(message:string)=>void){
   const ready=new Set<CollectionName>();
-  return names.map(name=>onSnapshot(collection(db,name),snapshot=>{cache[name]=snapshot.docs.map(item=>({id:item.id,...item.data()}));ready.add(name);emit();if(ready.size===names.length)onReady()},()=>onError("Не удалось загрузить данные. Проверьте подключение к интернету.")));
+  return names.map(name=>onSnapshot(collection(db,name),snapshot=>{cache[name]=snapshot.docs.map(item=>{const data=item.data();return {id:item.id,...data,...(name==="students"&&data.lessonPrice!=null?{price:Number(data.lessonPrice)}:{})}});ready.add(name);emit();if(ready.size===names.length)onReady()},()=>onError("Не удалось загрузить данные. Проверьте подключение к интернету.")));
 }
 
 export async function removeDocument(name:CollectionName,id:string){await deleteDoc(doc(db,name,id))}

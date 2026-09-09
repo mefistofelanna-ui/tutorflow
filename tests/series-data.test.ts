@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Lesson } from "../app/schedule/lesson-data.ts";
 import { buildSeriesLessons, conflictsFor } from "../app/schedule/series-utils.ts";
+import { currentLessonPrice } from "../app/students/student-price.ts";
 
 const lesson=(overrides:Partial<Lesson>={}):Lesson=>({id:"one",studentId:"student",date:"2026-08-18",time:"15:00",duration:60,status:"scheduled",paid:true,note:"",charged:false,...overrides});
 
@@ -34,4 +35,12 @@ test("detects interval overlap but ignores cancelled lessons",()=>{
   assert.equal(conflictsFor(lesson({time:"15:30"}),[lesson()]).length,1);
   assert.equal(conflictsFor(lesson({time:"16:00"}),[lesson()]).length,0);
   assert.equal(conflictsFor(lesson({time:"15:30"}),[lesson({status:"cancelled"})]).length,0);
+});
+
+test("uses each student's current Firestore lesson price",()=>{
+  assert.deepEqual([
+    currentLessonPrice({price:600}),
+    currentLessonPrice({price:600,lessonPrice:800}),
+    currentLessonPrice({price:600,lessonPrice:1000}),
+  ],[600,800,1000]);
 });
