@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import type { Lesson } from "../schedule/lesson-data";
+import type { ScheduleSlot } from "../schedule/series-utils";
 import type { Student } from "./student-data";
 
 export type StudentSchedule = {
@@ -10,6 +11,7 @@ export type StudentSchedule = {
   time: string;
   duration: Lesson["duration"];
   weekdays: number[];
+  slots: ScheduleSlot[];
   endDate: string;
 };
 
@@ -37,17 +39,15 @@ type Props = {
 
 export default function StudentForm({ initial, initialSchedule, title, onSave, onCancel }: Props) {
   const [form, setForm] = useState<Student>(initial ?? { id:"", name:"", grade:"", price:0, balance:0, days:"", comment:"" });
-  const [endTouched, setEndTouched] = useState(false);
   const [schedule, setSchedule] = useState<StudentSchedule>(initialSchedule ?? {
-    mode:"single", date:today, time:"15:00", duration:60, weekdays:[], endDate:addYear(today),
+    mode:"single", date:today, time:"15:00", duration:60, weekdays:[], slots:[], endDate:addYear(today),
   });
   const change = (key: keyof Student, value: string) => setForm({ ...form, [key]: key === "price" || key === "balance" ? Number(value) : value });
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (schedule.mode === "weekly" && !schedule.weekdays.length) return;
+    if (schedule.mode === "weekly" && !schedule.slots.length) return;
     onSave({ ...form, id: form.id || `student-${Date.now()}` }, initial && !initialSchedule ? undefined : schedule);
   };
-  const changeStart = (date: string) => setSchedule({ ...schedule, date, endDate: endTouched ? schedule.endDate : addYear(date) });
 
   return <div className="student-modal-backdrop" onMouseDown={event => event.target === event.currentTarget && onCancel()}>
     <div className="student-modal" role="dialog" aria-modal="true" aria-labelledby="student-form-title">
@@ -64,16 +64,21 @@ export default function StudentForm({ initial, initialSchedule, title, onSave, o
             <button type="button" className={schedule.mode === "single" ? "active" : ""} onClick={() => setSchedule({ ...schedule, mode:"single" })}>Одно занятие</button>
             <button type="button" className={schedule.mode === "weekly" ? "active" : ""} onClick={() => setSchedule({ ...schedule, mode:"weekly" })}>Еженедельно</button>
           </div>}
-          {schedule.mode === "weekly" && <>
-            <span className="field-caption">Дни недели</span>
-            <div className="weekday-chips">{weekdayLabels.map(([value,label]) => <button type="button" className={schedule.weekdays.includes(value) ? "active" : ""} key={value} onClick={() => setSchedule({ ...schedule, weekdays:schedule.weekdays.includes(value) ? schedule.weekdays.filter(day => day !== value) : [...schedule.weekdays,value] })}>{label}</button>)}</div>
-          </>}
-          <div className="schedule-inputs">
-            <label>{schedule.mode === "weekly" ? "Дата начала" : "Дата"}<input type="date" required value={schedule.date} onChange={event => changeStart(event.target.value)}/></label>
-            <label>Время<input type="time" required value={schedule.time} onChange={event => setSchedule({ ...schedule, time:event.target.value })}/></label>
-            <label>Продолжительность<select value={schedule.duration} onChange={event => setSchedule({ ...schedule, duration:Number(event.target.value) as Lesson["duration"] })}>{[30,45,60,90].map(value => <option key={value} value={value}>{value} минут</option>)}</select></label>
-            {schedule.mode === "weekly" && <label>Дата окончания<input type="date" required min={schedule.date} value={schedule.endDate} onChange={event => { setEndTouched(true); setSchedule({ ...schedule, endDate:event.target.value }); }}/></label>}
-          </div>
+          {schedule.mode === "weekly" && <div className="schedule-slots">
+            <div className="schedule-slot-head"><span>День недели</span><span>Время</span><span>Продолжительность</span></div>
+            {schedule.slots.map((slot,index)=><div className="schedule-slot" key={slot.weekday}>
+              <select aria-label="День недели" value={slot.weekday} onChange={event=>{const weekday=Number(event.target.value);if(schedule.slots.some((item,itemIndex)=>itemIndex!==index&&item.weekday===weekday))return;setSchedule({...schedule,slots:schedule.slots.map((item,itemIndex)=>itemIndex===index?{...item,weekday}:item)})}}>{weekdayLabels.map(([value,label])=><option value={value} disabled={schedule.slots.some((item,itemIndex)=>itemIndex!==index&&item.weekday===value)} key={value}>{label}</option>)}</select>
+              <input aria-label="Время" type="text" inputMode="numeric" required pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" placeholder="15:00" title="Введите время в 24-часовом формате ЧЧ:ММ" value={slot.time} onChange={event=>setSchedule({...schedule,slots:schedule.slots.map((item,itemIndex)=>itemIndex===index?{...item,time:event.target.value}:item)})}/>
+              <select aria-label="Продолжительность" value={slot.duration} onChange={event=>setSchedule({...schedule,slots:schedule.slots.map((item,itemIndex)=>itemIndex===index?{...item,duration:Number(event.target.value) as Lesson["duration"]}:item)})}>{[30,40,45,60,90].map(value=><option key={value} value={value}>{value} минут</option>)}</select>
+              <button type="button" className="schedule-slot-remove" aria-label="Удалить день" onClick={()=>setSchedule({...schedule,slots:schedule.slots.filter((_,itemIndex)=>itemIndex!==index)})}>×</button>
+            </div>)}
+            {schedule.slots.length<7&&<button type="button" className="schedule-add-day" onClick={()=>{const weekday=weekdayLabels.find(([value])=>!schedule.slots.some(item=>item.weekday===value))?.[0];if(weekday!==undefined)setSchedule({...schedule,slots:[...schedule.slots,{weekday,time:"15:00",duration:60}]})}}>+ Добавить день</button>}
+          </div>}
+          {schedule.mode === "single" && <div className="schedule-inputs">
+            <label>Дата<input type="date" required value={schedule.date} onChange={event => setSchedule({ ...schedule, date:event.target.value })}/></label>
+            <label>Время<input type="text" inputMode="numeric" required pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" placeholder="15:00" title="Введите время в 24-часовом формате ЧЧ:ММ" value={schedule.time} onChange={event => setSchedule({ ...schedule, time:event.target.value })}/></label>
+            <label>Продолжительность<select value={schedule.duration} onChange={event => setSchedule({ ...schedule, duration:Number(event.target.value) as Lesson["duration"] })}>{[30,40,45,60,90].map(value => <option key={value} value={value}>{value} минут</option>)}</select></label>
+          </div>}
         </fieldset>}
         <div className="form-actions"><button type="button" className="form-cancel" onClick={onCancel}>Отмена</button><button className="form-save">Сохранить</button></div>
       </form>

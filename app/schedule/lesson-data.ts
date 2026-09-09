@@ -7,7 +7,7 @@ export type Lesson = {
   studentId: string;
   date: string;
   time: string;
-  duration: 30 | 45 | 60 | 90;
+  duration: 30 | 40 | 45 | 60 | 90;
   status: LessonStatus;
   paid: boolean;
   note: string;
@@ -37,7 +37,7 @@ export function readLessons(): Lesson[] {
 }
 
 export function writeLessons(lessons: Lesson[]) {
-  void replaceCollection("lessons",lessons).catch(()=>window.dispatchEvent(new CustomEvent("tutorflow-error",{detail:"Не удалось сохранить расписание."})));
+  return replaceCollection("lessons",lessons).catch(error=>{window.dispatchEvent(new CustomEvent("tutorflow-error",{detail:"Не удалось сохранить расписание."}));throw error});
 }
 
 export function studentName(id:string){return initialStudents.find(student=>student.id===id)?.name??"Ученик"}

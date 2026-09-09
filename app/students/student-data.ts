@@ -23,6 +23,6 @@ export function readStudents(): Student[] {
 }
 
 export function writeStudents(students: Student[]) {
-  void replaceCollection("students",students).catch(()=>window.dispatchEvent(new CustomEvent("tutorflow-error",{detail:"Не удалось сохранить учеников."})));
+  return replaceCollection("students",students).catch(error=>{window.dispatchEvent(new CustomEvent("tutorflow-error",{detail:"Не удалось сохранить учеников."}));throw error});
 }
 import { cached,replaceCollection } from "../../lib/firestore-store";

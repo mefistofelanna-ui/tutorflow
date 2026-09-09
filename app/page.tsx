@@ -42,7 +42,7 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-      <aside className={menuOpen ? "sidebar open" : "sidebar"}>
+      <aside className={menuOpen ? "sidebar open" : "sidebar"} style={menuOpen?{transform:"translateX(0)",zIndex:100}:{}}>
         <div className="brand"><span className="brand-mark">T</span><span>TutorFlow</span></div>
         <nav aria-label="Основная навигация">
           {navItems.map(([icon, label], index) => (
@@ -58,7 +58,7 @@ export default function Home() {
         </div>
       </aside>
 
-      {menuOpen && <button className="backdrop" aria-label="Закрыть меню" onClick={() => setMenuOpen(false)} />}
+      {menuOpen && <button className="backdrop" style={{zIndex:90}} aria-label="Закрыть меню" onClick={() => setMenuOpen(false)} />}
 
       <section className="content">
         <img className="corner-lavender" src="/asset-lavender-sprig.png" alt="" aria-hidden="true" />

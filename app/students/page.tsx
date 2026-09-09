@@ -6,7 +6,7 @@ import { initialStudents, readStudents, Student, writeStudents } from "./student
 import StudentForm, { StudentSchedule } from "./StudentForm";
 import StudentsShell from "./StudentsShell";
 import { Lesson, readLessons, writeLessons } from "../schedule/lesson-data";
-import { buildSeriesLessons, conflictsFor, LessonSeries, readSeries, writeSeries } from "../schedule/series-data";
+import { buildSeriesLessons, conflictsFor, formatSeriesSchedule, LessonSeries, readSeries, writeSeries } from "../schedule/series-data";
 import "./students.css";
 
 type PendingAdd = { student:Student; schedule:StudentSchedule; series?:LessonSeries; created:Lesson[]; conflicts:Lesson[] };
@@ -20,13 +20,14 @@ const formatConflict = (lesson:Lesson, students:Student[]) => {
 
 export default function StudentsPage() {
   const [students,setStudents] = useState<Student[]>(initialStudents);
+  const [allSeries,setAllSeries] = useState<LessonSeries[]>([]);
   const [query,setQuery] = useState("");
   const [adding,setAdding] = useState(false);
   const [pending,setPending] = useState<PendingAdd|null>(null);
   const [toast,setToast] = useState("");
   const router = useRouter();
 
-  useEffect(() => { const load=()=>setStudents(readStudents()),timeout=window.setTimeout(() => { load(); if(new URLSearchParams(window.location.search).get("add") === "1") setAdding(true); },0); window.addEventListener("tutorflow-data-change",load); return () => {window.clearTimeout(timeout);window.removeEventListener("tutorflow-data-change",load)}; },[]);
+  useEffect(() => { const load=()=>{setStudents(readStudents());setAllSeries(readSeries())},timeout=window.setTimeout(() => { load(); if(new URLSearchParams(window.location.search).get("add") === "1") setAdding(true); },0); window.addEventListener("tutorflow-data-change",load); return () => {window.clearTimeout(timeout);window.removeEventListener("tutorflow-data-change",load)}; },[]);
   const filtered = useMemo(() => students.filter(student => !student.archived && student.name.toLocaleLowerCase("ru").includes(query.trim().toLocaleLowerCase("ru"))),[students,query]);
   const commit = (request:PendingAdd, skipConflicts=false) => {
     const conflictIds = new Set(request.conflicts.map(item => item.id));
@@ -42,10 +43,9 @@ export default function StudentsPage() {
     let series:LessonSeries|undefined;
     let created:Lesson[];
     if(schedule.mode === "weekly") {
-      series={id:`series-${Date.now()}`,studentId:student.id,weekdays:schedule.weekdays,time:schedule.time,duration:schedule.duration,startDate:schedule.date,endDate:schedule.endDate};
+      series={id:`series-${Date.now()}`,studentId:student.id,slots:schedule.slots,startDate:schedule.date,endDate:schedule.endDate};
       created=buildSeriesLessons(series);
-      const labels=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
-      student.days=`${schedule.weekdays.map(day => labels[day]).join(", ")} · ${schedule.time}`;
+      student.days=formatSeriesSchedule(series);
     } else {
       created=[{id:`lesson-${Date.now()}`,studentId:student.id,date:schedule.date,time:schedule.time,duration:schedule.duration,status:"scheduled",paid:true,note:"",charged:false}];
       student.days="Плавающий график";
@@ -60,7 +60,7 @@ export default function StudentsPage() {
   return <StudentsShell toast={toast}>
     <header className="students-header"><div><h1>Ученики</h1><p>Все ученики и важная информация в одном месте</p></div><button className="students-add" onClick={() => setAdding(true)}>+ Добавить ученика</button></header>
     <div className="students-toolbar"><label className="search-wrap"><span className="sr-only">Поиск по имени</span><input className="students-search" placeholder="Поиск по имени" value={query} onChange={event => setQuery(event.target.value)}/></label></div>
-    <div className="student-grid">{filtered.map((student,index) => <article className={`student-card decor-${index%3}`} key={student.id} tabIndex={0} onClick={() => router.push(`/students/${student.id}`)} onKeyDown={event => { if(event.key === "Enter" || event.key === " ") router.push(`/students/${student.id}`); }}><div className={`student-list-avatar avatar-${index%4}`}>{student.name.split(" ").map(part => part[0]).join("").slice(0,2)}</div><div className="student-card-body"><h2>{student.name}</h2><span className="student-grade">{student.grade||"Класс не указан"}</span><div className="student-facts"><div className="student-fact"><span>Стоимость занятия</span><strong>{student.price.toLocaleString("ru-RU")} ₽</strong></div><div className="student-fact"><span>Остаток занятий</span><b className={`balance-pill ${tone(student.balance)}`}>{student.balance}</b></div><div className="student-fact"><span>Дни занятий</span><strong>{student.days||"—"}</strong></div></div><p className="student-comment">{student.comment||"Без комментария"}</p></div></article>)}{!filtered.length&&<div className="empty-students">Ученики не найдены</div>}</div>
+    <div className="student-grid">{filtered.map((student,index) => <article className={`student-card decor-${index%3}`} key={student.id} tabIndex={0} onClick={() => router.push(`/students/${student.id}`)} onKeyDown={event => { if(event.key === "Enter" || event.key === " ") router.push(`/students/${student.id}`); }}><div className={`student-list-avatar avatar-${index%4}`}>{student.name.split(" ").map(part => part[0]).join("").slice(0,2)}</div><div className="student-card-body"><h2>{student.name}</h2><span className="student-grade">{student.grade||"Класс не указан"}</span><div className="student-facts"><div className="student-fact"><span>Стоимость занятия</span><strong>{student.price.toLocaleString("ru-RU")} ₽</strong></div><div className="student-fact"><span>Остаток занятий</span><b className={`balance-pill ${tone(student.balance)}`}>{student.balance}</b></div><div className="student-fact"><span>Дни занятий</span><strong>{allSeries.find(item=>item.studentId===student.id)?formatSeriesSchedule(allSeries.find(item=>item.studentId===student.id)!):student.days||"—"}</strong></div></div><p className="student-comment">{student.comment||"Без комментария"}</p></div></article>)}{!filtered.length&&<div className="empty-students">Ученики не найдены</div>}</div>
     {adding&&<StudentForm title="Новый ученик" onSave={add} onCancel={() => { setAdding(false); setPending(null); }}/>}
     {pending&&<div className="student-modal-backdrop conflict-backdrop"><section className="student-modal conflict-modal" role="alertdialog" aria-modal="true"><h2>{pending.schedule.mode === "weekly" ? "Найдены конфликты" : "Это время уже занято"}</h2><ul>{pending.conflicts.slice(0,12).map(candidate => { const occupied=conflictsFor(candidate,readLessons())[0]; return <li key={candidate.id}>{occupied ? formatConflict(occupied,students) : candidate.date}</li>; })}</ul>{pending.conflicts.length>12&&<p>И ещё: {pending.conflicts.length-12}</p>}<div className="form-actions"><button className="form-cancel" onClick={() => { setPending(null); setAdding(false); }}>Отмена</button><button className="form-cancel" onClick={() => setPending(null)}>Изменить расписание</button>{pending.schedule.mode === "weekly"&&<button className="form-save" onClick={() => commit(pending,true)}>Пропустить конфликтующие даты</button>}</div></section></div>}
   </StudentsShell>;
