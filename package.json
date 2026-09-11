@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/series-data.test.ts",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/series-data.test.ts tests/payment-calculation.test.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
   "dependencies": {

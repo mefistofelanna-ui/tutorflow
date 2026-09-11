@@ -5,6 +5,7 @@ export type Student = {
   price: number;
   lessonPrice?: number;
   balance: number;
+  moneyCredit?: number;
   days: string;
   comment: string;
   archived?: boolean;

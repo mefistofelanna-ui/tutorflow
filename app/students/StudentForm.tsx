@@ -39,7 +39,7 @@ type Props = {
 };
 
 export default function StudentForm({ initial, initialSchedule, title, onSave, onCancel }: Props) {
-  const [form, setForm] = useState<Student>(initial ?? { id:"", name:"", grade:"", price:0, balance:0, days:"", comment:"" });
+  const [form, setForm] = useState<Student>(initial ?? { id:"", name:"", grade:"", price:0, balance:0, moneyCredit:0, days:"", comment:"" });
   const [schedule, setSchedule] = useState<StudentSchedule>(initialSchedule ?? {
     mode:"single", date:today, time:"15:00", duration:60, weekdays:[], slots:[], endDate:addYear(today),
   });
