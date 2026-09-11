@@ -40,25 +40,22 @@ export function reversePayment(student: PaymentBalance, payment: Payment, editin
 export function planPayment(payment: Payment, previous: Payment | null, students: Student[]) {
   const student = students.find(item => item.id === payment.studentId);
   if (!student) throw new Error("Student not found");
-  // Opening/saving an existing record or changing only its date never recalculates it.
-  if (previous && previous.studentId === payment.studentId && previous.amount === payment.amount &&
-      (previous.moneyCreditAfter !== undefined || previous.lessonCount === payment.lessonCount && previous.lessonPrice === payment.lessonPrice)) {
-    return { payment: { ...previous, date: payment.date }, updates: [] };
-  }
-  const updates = new Map<string, PaymentBalance>();
   if (previous) {
-    const oldStudent = students.find(item => item.id === previous.studentId);
-    if (!oldStudent) throw new Error("Student not found");
-    updates.set(oldStudent.id, reversePayment(oldStudent, previous, oldStudent.id === student.id));
+    if (previous.studentId !== payment.studentId) throw new Error("Нельзя изменить ученика у сохранённой оплаты.");
+    // Only an explicit save recalculates a historical record. Its price and incoming
+    // credit belong to that payment, not to the student's present-day account.
+    const saved = {
+      ...previous, date: payment.date, amount: payment.amount,
+      ...calculatePayment(payment.amount, previous.lessonPrice, previous.moneyCreditBefore ?? 0),
+    };
+    const balance = student.balance + saved.lessonCount - previous.lessonCount;
+    const credit = kopecks(student.moneyCredit ?? 0) + kopecks(saved.moneyCreditAfter) - kopecks(previous.moneyCreditAfter ?? 0);
+    if (credit < 0) throw new Error("Денежный остаток этой оплаты уже использован. Сначала скорректируйте последующие оплаты.");
+    const updates = balance === student.balance && credit === kopecks(student.moneyCredit ?? 0)
+      ? [] : [{ id: student.id, balance, moneyCredit: credit / 100 }];
+    return { payment: saved, updates };
   }
-  const base = updates.get(student.id) ?? student;
-  // Historical payments retain their original editing rules; no automatic migration.
-  const legacy = previous && previous.moneyCreditAfter === undefined;
-  const lessonPrice = previous?.studentId === student.id ? previous.lessonPrice : Number(student.lessonPrice ?? student.price ?? 0);
-  const saved = legacy ? payment : { ...payment, lessonPrice, ...calculatePayment(payment.amount, lessonPrice, base.moneyCredit ?? 0) };
-  updates.set(student.id, {
-    balance: Math.max(0, base.balance + saved.lessonCount),
-    moneyCredit: saved.moneyCreditAfter ?? base.moneyCredit ?? 0,
-  });
-  return { payment: saved, updates: [...updates].map(([id, values]) => ({ id, ...values })) };
+  const lessonPrice = Number(student.lessonPrice ?? student.price ?? 0);
+  const saved = { ...payment, lessonPrice, ...calculatePayment(payment.amount, lessonPrice, student.moneyCredit ?? 0) };
+  return { payment: saved, updates: [{ id: student.id, balance: student.balance + saved.lessonCount, moneyCredit: saved.moneyCreditAfter }] };
 }

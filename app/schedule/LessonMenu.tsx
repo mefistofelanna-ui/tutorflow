@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-export default function LessonMenu({ label, children }: { label: string; children: ReactNode }) {
+export default function LessonMenu({ label, children, className = "lesson-menu", popupClassName = "lesson-menu-popup" }: { label: string; children: ReactNode; className?: string; popupClassName?: string }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLDetailsElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -60,8 +60,8 @@ export default function LessonMenu({ label, children }: { label: string; childre
     return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
   }, [open]);
 
-  return <details className="lesson-menu" ref={trigger} onToggle={event => setOpen(event.currentTarget.open)}>
+  return <details className={className} ref={trigger} onToggle={event => setOpen(event.currentTarget.open)}>
     <summary aria-label={label} aria-expanded={open}>•••</summary>
-    {open && createPortal(<div className="lesson-menu-popup" ref={menu}>{children}</div>, document.body)}
+    {open && createPortal(<div className={popupClassName} ref={menu}>{children}</div>, document.body)}
   </details>;
 }

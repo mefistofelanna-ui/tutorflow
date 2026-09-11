@@ -8,10 +8,15 @@ export async function completeLessonTransaction(lessonId:string,studentId:string
  return runTransaction(db,async transaction=>{const lessonRef=doc(db,"lessons",lessonId),studentRef=doc(db,"students",studentId);const [lessonSnap,studentSnap]=await Promise.all([transaction.get(lessonRef),transaction.get(studentRef)]);if(!lessonSnap.exists()||!studentSnap.exists())throw new Error("missing");const lesson=lessonSnap.data();if(lesson.status==="completed"||lesson.charged)return false;const balance=Number(studentSnap.data().balance??0);transaction.update(lessonRef,{status:"completed",charged:true,earnedAmount:price,note,updatedAt:serverTimestamp()});transaction.update(studentRef,{balance:Math.max(0,balance-1),updatedAt:serverTimestamp()});return true});
 }
 
-export async function savePaymentTransaction(payment:Payment){
+export async function savePaymentTransaction(payment:Payment,expected?:Payment){
  return runTransaction(db,async transaction=>{
   const paymentRef=doc(db,"payments",payment.id),paymentSnap=await transaction.get(paymentRef);
   const previous=paymentSnap.exists()?paymentSnap.data() as Payment:null;
+  if(expected){
+   if(!previous)throw new Error("Эта оплата уже удалена. Закройте форму и обновите историю.");
+   const fields=(['studentId','date','amount','lessonPrice','lessonCount','moneyCreditBefore','moneyCreditAfter'] as const);
+   if(fields.some(field=>previous[field]!==expected[field]))throw new Error("Оплата изменилась после открытия формы. Откройте её заново и проверьте расчёт.");
+  }
   const ids=[...new Set([payment.studentId,previous?.studentId].filter(Boolean) as string[])];
   const snaps=await Promise.all(ids.map(id=>transaction.get(doc(db,"students",id))));
   if(snaps.some(snap=>!snap.exists()))throw new Error("Student not found");
