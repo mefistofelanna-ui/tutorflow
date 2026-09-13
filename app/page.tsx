@@ -46,7 +46,7 @@ export default function Home() {
         <div className="brand"><span className="brand-mark">T</span><span>TutorFlow</span></div>
         <nav aria-label="Основная навигация">
           {navItems.map(([icon, label], index) => (
-            <button className={index === 0 ? "nav-item active" : "nav-item"} key={label} onClick={() => { setMenuOpen(false); if(index===1)window.location.href="/schedule";else if(index===2)window.location.href="/students";else if(index===3)window.location.href="/payments";else if(index>3)notify(`${label} — следующий этап`); }}>
+            <button className={index === 0 ? "nav-item active" : "nav-item"} key={label} onClick={() => { setMenuOpen(false); if(index===1)window.location.href="/schedule";else if(index===2)window.location.href="/students";else if(index===3)window.location.href="/payments";else if(index===4)window.location.href="/statistics"; }}>
               <span className="nav-icon">{icon}</span>{label}
             </button>
           ))}

@@ -3,10 +3,10 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import {useTutorAuth} from "../AppProvider";
 
-export default function StudentsShell({ children, toast, active="Ученики" }: { children: ReactNode; toast?: string; active?: "Ученики"|"Расписание"|"Оплаты" }) {
+export default function StudentsShell({ children, toast, active="Ученики" }: { children: ReactNode; toast?: string; active?: "Ученики"|"Расписание"|"Оплаты"|"Статистика" }) {
   const [open,setOpen]=useState(false);
   const {logout}=useTutorAuth();
-  const items=[["⌂","Главная","/"],["□","Расписание","/schedule"],["♙","Ученики","/students"],["₽","Оплаты","/payments"],["↗","Статистика","#"]];
+  const items=[["⌂","Главная","/"],["□","Расписание","/schedule"],["♙","Ученики","/students"],["₽","Оплаты","/payments"],["↗","Статистика","/statistics"]];
   return <main className="students-shell">
     <aside className={open?"students-sidebar open":"students-sidebar"}>
       <div className="students-brand"><i>T</i>TutorFlow</div>
