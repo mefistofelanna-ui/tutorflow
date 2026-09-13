@@ -28,6 +28,9 @@ test("standard Next.js server renders TutorFlow", async () => {
     assert.match(html, /<title>TutorFlow/);
     assert.match(html, /Firebase не настроен|Загружаем TutorFlow|Занятия сегодня/);
     assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Building your site/);
+    assert.match(html, /rel="manifest" href="\/manifest.webmanifest"/);
+    assert.match(html, /name="apple-mobile-web-app-capable" content="yes"/);
+    assert.match(html, /rel="apple-touch-icon"/);
   } finally {
     server.kill();
   }

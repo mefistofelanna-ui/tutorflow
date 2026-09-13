@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="paper"><stop stop-color="#fffaf2"/><stop offset="1" stop-color="#f5ecf4"/></radialGradient>
+    <radialGradient id="lavender" cx=".35" cy=".28" r=".8"><stop stop-color="#f8f2fb"/><stop offset=".45" stop-color="#ded0eb"/><stop offset="1" stop-color="#c8b0de"/></radialGradient>
+    <filter id="wash"><feGaussianBlur stdDeviation="10"/></filter>
+  </defs>
+  <path fill="url(#paper)" d="M0 0h512v512H0z"/>
+  <ellipse cx="258" cy="266" rx="193" ry="185" fill="#ded0eb" opacity=".45" filter="url(#wash)"/>
+  <path d="M254 71C363 69 446 145 440 258S365 442 252 439 70 371 73 259 144 75 254 71Z" fill="url(#lavender)"/>
+  <ellipse cx="171" cy="157" rx="65" ry="39" fill="#fffaf2" opacity=".32" filter="url(#wash)"/>
+  <!-- Serif T, matching the existing lavender monogram, outlined for consistent rasterization. -->
+  <path d="M157 158H355L360 214H350C342 178 330 173 283 173V325C283 344 290 349 315 351V361H197V351C222 349 229 344 229 325V173C182 173 170 178 162 214H152Z" fill="#75549f"/>
+</svg>
