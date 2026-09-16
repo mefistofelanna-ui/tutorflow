@@ -4,6 +4,7 @@ export type Student = {
   grade: string;
   price: number;
   lessonPrice?: number;
+  // Legacy package fields retained for existing documents; finance uses lessons/payments.
   balance: number;
   moneyCredit?: number;
   days: string;

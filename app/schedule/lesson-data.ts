@@ -13,6 +13,8 @@ export type Lesson = {
   note: string;
   charged: boolean;
   earnedAmount?: number;
+  lessonPrice?: number;
+  historicalPriceMissing?: boolean;
   seriesId?: string;
   seriesOverride?: boolean;
 };

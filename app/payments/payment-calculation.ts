@@ -1,61 +1,50 @@
 import type { Payment } from "./payment-data.ts";
 import type { Student } from "../students/student-data.ts";
+import type { Lesson, LessonStatus } from "../schedule/lesson-data.ts";
 
-// Calculate in kopecks so decimal amounts do not lose money to float rounding.
-function kopecks(value: number): number {
+export function kopecks(value: number): number {
   const result = Math.round(value * 100);
-  if (!Number.isFinite(value) || value < 0 || !Number.isSafeInteger(result)) throw new Error("Invalid money amount");
+  if (!Number.isFinite(value) || value < 0 || !Number.isSafeInteger(result)) throw new Error("Некорректная сумма");
   return result;
 }
 
-export function calculatePayment(amount: number, lessonPrice: number, moneyCredit = 0) {
-  const paid = kopecks(amount), price = kopecks(lessonPrice), credit = kopecks(moneyCredit);
-  if (paid <= 0 || price <= 0 || !Number.isSafeInteger(paid + credit)) throw new Error("Payment and lesson price must be positive");
-  return {
-    lessonCount: Math.floor((paid + credit) / price),
-    moneyCreditBefore: credit / 100,
-    moneyCreditAfter: ((paid + credit) % price) / 100,
-  };
+// Never infer historical charges from today's student price or payment packages.
+export function savedLessonPrice(lesson: Pick<Lesson, "earnedAmount" | "lessonPrice">): number | null {
+  const value = lesson.earnedAmount ?? lesson.lessonPrice;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? kopecks(value) / 100 : null;
 }
 
-export type PaymentBalance = { balance: number; moneyCredit?: number };
-
-export function reversePayment(student: PaymentBalance, payment: Payment, editing = false): PaymentBalance {
-  let balance = student.balance - payment.lessonCount;
-  if (payment.moneyCreditAfter === undefined || payment.moneyCreditBefore === undefined) {
-    return { balance: editing ? balance : Math.max(0, balance), moneyCredit: student.moneyCredit ?? 0 };
+export function lessonStatusFields(lesson: Lesson, status: LessonStatus, currentPrice: number) {
+  const saved = savedLessonPrice(lesson);
+  if (saved === null && (lesson.status === "completed" || lesson.historicalPriceMissing)) {
+    return { status, charged: status === "completed", historicalPriceMissing: true };
   }
-  let credit = kopecks(student.moneyCredit ?? 0) - kopecks(payment.moneyCreditAfter) + kopecks(payment.moneyCreditBefore);
-  // A later payment may already have converted this payment's remainder to a lesson.
-  if (credit < 0) {
-    const price = kopecks(payment.lessonPrice);
-    if (price <= 0) throw new Error("Invalid lesson price");
-    const borrowedLessons = Math.ceil(-credit / price);
-    balance -= borrowedLessons;
-    credit += borrowedLessons * price;
+  if (status === "completed") {
+    return { status, charged: true, earnedAmount: saved ?? kopecks(currentPrice) / 100 };
   }
-  return { balance: editing ? balance : Math.max(0, balance), moneyCredit: credit / 100 };
+  return { status, charged: false };
 }
+
+export function calculateFinance(studentId: string, lessons: Lesson[], payments: Payment[], month?: string) {
+  const selected = lessons.filter(item => item.studentId === studentId && (!month || item.date.startsWith(month + "-")));
+  const completed = selected.filter(item => item.status === "completed");
+  const missingPrice = completed.filter(item => savedLessonPrice(item) === null).length;
+  const charged = completed.reduce((sum, item) => sum + kopecks(savedLessonPrice(item) ?? 0), 0);
+  const paid = payments.filter(item => item.studentId === studentId && (!month || item.date.startsWith(month + "-"))).reduce((sum, item) => sum + kopecks(item.amount), 0);
+  return { completed: completed.length, cancelled: selected.filter(item => item.status === "cancelled").length, charged: charged / 100, paid: paid / 100, balance: (paid - charged) / 100, missingPrice };
+}
+
+export const money = (value: number) => value.toLocaleString("ru-RU") + " ₽";
+export function financeLabel(finance: { balance: number; missingPrice?: number }, colon = true) {
+  if (finance.missingPrice) return "Уточните стоимость занятий";
+  return finance.balance === 0 ? "Оплачено" : (finance.balance > 0 ? "Аванс" : "Долг") + (colon ? ": " : " ") + money(Math.abs(finance.balance));
+}
+export const financeTone = (balance: number) => balance < 0 ? "balance-low" : balance > 0 ? "balance-good" : "balance-warn";
 
 export function planPayment(payment: Payment, previous: Payment | null, students: Student[]) {
-  const student = students.find(item => item.id === payment.studentId);
-  if (!student) throw new Error("Student not found");
-  if (previous) {
-    if (previous.studentId !== payment.studentId) throw new Error("Нельзя изменить ученика у сохранённой оплаты.");
-    // Only an explicit save recalculates a historical record. Its price and incoming
-    // credit belong to that payment, not to the student's present-day account.
-    const saved = {
-      ...previous, date: payment.date, amount: payment.amount,
-      ...calculatePayment(payment.amount, previous.lessonPrice, previous.moneyCreditBefore ?? 0),
-    };
-    const balance = student.balance + saved.lessonCount - previous.lessonCount;
-    const credit = kopecks(student.moneyCredit ?? 0) + kopecks(saved.moneyCreditAfter) - kopecks(previous.moneyCreditAfter ?? 0);
-    if (credit < 0) throw new Error("Денежный остаток этой оплаты уже использован. Сначала скорректируйте последующие оплаты.");
-    const updates = balance === student.balance && credit === kopecks(student.moneyCredit ?? 0)
-      ? [] : [{ id: student.id, balance, moneyCredit: credit / 100 }];
-    return { payment: saved, updates };
-  }
-  const lessonPrice = Number(student.lessonPrice ?? student.price ?? 0);
-  const saved = { ...payment, lessonPrice, ...calculatePayment(payment.amount, lessonPrice, student.moneyCredit ?? 0) };
-  return { payment: saved, updates: [{ id: student.id, balance: student.balance + saved.lessonCount, moneyCredit: saved.moneyCreditAfter }] };
+  if (!students.some(item => item.id === payment.studentId)) throw new Error("Ученик не найден");
+  if (previous && previous.studentId !== payment.studentId) throw new Error("Нельзя изменить ученика у сохранённой оплаты.");
+  if (kopecks(payment.amount) <= 0) throw new Error("Введите сумму оплаты больше нуля");
+  // Preserve legacy metadata; only explicit edits change the actual amount/date.
+  return { payment: previous ? { ...previous, date: payment.date, amount: payment.amount } : { id: payment.id, studentId: payment.studentId, date: payment.date, amount: payment.amount } };
 }

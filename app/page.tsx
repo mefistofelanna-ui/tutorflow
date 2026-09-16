@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { initialStudents, readStudents, Student } from "./students/student-data";
 import { demoToday, initialLessons, Lesson, readLessons } from "./schedule/lesson-data";
+import { useFinancialData } from "./payments/use-financial-data";
+import { financeLabel, savedLessonPrice } from "./payments/payment-calculation";
 import {useTutorAuth} from "./AppProvider";
 
 const navItems = [
@@ -15,10 +17,11 @@ const navItems = [
 
 const colors=["purple","blue","peach","sage"];
 const dashboardDate=()=>new Date(`${demoToday}T12:00:00`).toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"}).replace(/^./,letter=>letter.toLocaleUpperCase("ru-RU"));
-function dashboardLessons(students=initialStudents,source=initialLessons){return source.filter(lesson=>lesson.date===demoToday).sort((a,b)=>a.time.localeCompare(b.time)).map((lesson,index)=>{const student=students.find(item=>item.id===lesson.studentId);return {id:lesson.id,time:lesson.time,duration:lesson.duration,name:student?.name??"Ученик",grade:student?.grade??"",initials:(student?.name??"У").split(" ").map(part=>part[0]).join("").slice(0,2),color:colors[index%colors.length],paid:lesson.paid,status:lesson.status}})}
+function dashboardLessons(students=initialStudents,source=initialLessons){return source.filter(lesson=>lesson.date===demoToday).sort((a,b)=>a.time.localeCompare(b.time)).map((lesson,index)=>{const student=students.find(item=>item.id===lesson.studentId);return {id:lesson.id,studentId:lesson.studentId,time:lesson.time,duration:lesson.duration,name:student?.name??"Ученик",grade:student?.grade??"",initials:(student?.name??"У").split(" ").map(part=>part[0]).join("").slice(0,2),color:colors[index%colors.length],paid:lesson.paid,status:lesson.status}})}
 const statusNames={scheduled:"Запланировано",completed:"Проведено",cancelled:"Отменено",rescheduled:"Перенесено"};
 
 export default function Home() {
+  const finance=useFinancialData();
   const {logout}=useTutorAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -27,12 +30,12 @@ export default function Home() {
   const lessons=dashboardLessons(students,sourceLessons);
   useEffect(()=>{const load=()=>{setStudents(readStudents());setSourceLessons(readLessons())};const timer=window.setTimeout(load,0);window.addEventListener("tutorflow-data-change",load);window.addEventListener("storage",load);return()=>{window.clearTimeout(timer);window.removeEventListener("tutorflow-data-change",load);window.removeEventListener("storage",load)}},[]);
   const completedThisMonth=sourceLessons.filter(item=>{const date=new Date(`${item.date}T12:00:00`),today=new Date(`${demoToday}T12:00:00`);return item.status==="completed"&&date.getMonth()===today.getMonth()&&date.getFullYear()===today.getFullYear()});
-  const reminders=students.filter(student=>student.balance<=4).sort((a,b)=>a.balance-b.balance).slice(0,3);
+  const reminders=students.filter(student=>finance.forStudent(student.id).balance<0).sort((a,b)=>finance.forStudent(a.id).balance-finance.forStudent(b.id).balance).slice(0,3);
   const stats = [
     { label: "Занятий сегодня", value: String(lessons.length), tone: "lavender", icon: "⌁" },
     { label: "Проведено", value: String(lessons.filter(item=>item.status==="completed").length), tone: "sage", icon: "✓" },
-    { label: "Ожидает оплаты", value: String(students.filter(item=>item.balance===0).length), tone: "peach", icon: "₽" },
-    { label: "Доход за август", value: `${completedThisMonth.reduce((sum,item)=>sum+(item.earnedAmount??students.find(student=>student.id===item.studentId)?.price??0),0).toLocaleString("ru-RU")} ₽`, tone: "blue", icon: "↗" },
+    { label: "Ожидает оплаты", value: String(students.filter(item=>finance.forStudent(item.id).balance<0).length), tone: "peach", icon: "₽" },
+    { label: "Начислено за месяц", value: `${completedThisMonth.reduce((sum,item)=>sum+(savedLessonPrice(item)??0),0).toLocaleString("ru-RU")} ₽`, tone: "blue", icon: "↗" },
   ];
 
   const notify = (message: string) => {
@@ -80,7 +83,7 @@ export default function Home() {
                 <div className="lesson-time"><strong>{lesson.time}</strong><span>{lesson.duration} мин</span></div>
                 <div className={`student-avatar ${lesson.color}`}>{lesson.initials}</div>
                 <div className="student-info"><strong>{lesson.name}</strong><span>{lesson.grade}</span></div>
-                <span className={lesson.paid ? "badge paid" : "badge unpaid"}>{lesson.paid ? "Оплачено" : "Не оплачено"}</span>
+                <span className={finance.forStudent(lesson.studentId).balance < 0 ? "badge unpaid" : "badge paid"}>{financeLabel(finance.forStudent(lesson.studentId))}</span>
                 <span className={`status ${lesson.status}`}><i />{statusNames[lesson.status]}</span>
                 <button className="more" aria-label={`Действия: ${lesson.name}`} onClick={() => notify(`Действия для ${lesson.name}`)}>•••</button>
               </article>)}
@@ -89,7 +92,7 @@ export default function Home() {
 
           <aside className="panel reminders">
             <div className="panel-heading"><div><p className="section-kicker">ВАЖНОЕ</p><h2>Напоминания</h2></div><span className="bell">♧</span></div>
-            {reminders.map(student=><div className={`reminder ${student.balance===0?"rose-reminder":student.balance===1?"peach-reminder":"yellow-reminder"}`} key={student.id}><span className="reminder-icon">{student.balance}</span><div><strong>{student.name}</strong><p>{student.balance===0?"Оплаченные занятия закончились":`Осталось ${student.balance} занятия`}</p></div><button aria-label={`Подробнее: ${student.name}`}>›</button></div>)}
+            {reminders.map(student=><div className="reminder rose-reminder" key={student.id}><span className="reminder-icon">₽</span><div><strong>{student.name}</strong><p>{financeLabel(finance.forStudent(student.id))}</p></div><button aria-label={`Подробнее: ${student.name}`}>›</button></div>)}
             <button className="all-reminders" onClick={() => notify("Все напоминания просмотрены")}>Посмотреть все напоминания</button>
           </aside>
         </div>

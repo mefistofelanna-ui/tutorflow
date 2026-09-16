@@ -57,7 +57,6 @@ export default function StudentForm({ initial, initialSchedule, title, onSave, o
         <label className="full">Имя *<input required autoFocus value={form.name} onChange={event => change("name", event.target.value)}/></label>
         <label>Класс<input value={form.grade} onChange={event => change("grade", event.target.value)}/></label>
         <label>Стоимость занятия<input type="number" min="0" value={form.price || ""} onChange={event => change("price", event.target.value)}/></label>
-        <label>Остаток оплаченных занятий<input type="number" min="0" value={form.balance} onChange={event => change("balance", event.target.value)}/></label>
         <label className="full">Комментарий<textarea value={form.comment} onChange={event => change("comment", event.target.value)}/></label>
         {(!initial || initialSchedule) && <fieldset className="schedule-fields full">
           <legend>Расписание</legend>
